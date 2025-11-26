@@ -12,11 +12,17 @@ fn main() {
         
         let mut command = String::new();
         io::stdin().read_line(&mut command).unwrap();
-        if command.trim() == "exit" {
-            break;
-        }
-        println!("{}: command not found",command.trim());
 
+        let command  = command.trim();
+
+        let tokens = command.split_whitespace().collect::<Vec<&str>>();
+        // println!("{:?}",iter.next());
+
+        match tokens[0]{
+            "exit" => break,
+            "echo" => println!("{}", tokens[1..].join(" ")),
+            _ =>  println!("{}: command not found",command)
+        } 
        
     }
 
