@@ -21,6 +21,7 @@ fn main() {
         match tokens[0]{
             "exit" => break,
             "echo" => println!("{}", tokens[1..].join(" ")),
+            "type" => println!("{} is a shell builtin", tokens[1..].join(" ")),
             _ =>  println!("{}: command not found",command)
         } 
        
