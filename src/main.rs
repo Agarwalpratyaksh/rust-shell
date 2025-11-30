@@ -24,7 +24,7 @@ fn main() {
             "type" => {
                 let arg = tokens[1];
                 match arg {
-                    "exit" | "echo" | "type" => {
+                    "exit" | "echo" | "type" |"pwd" => {
                         println!("{} is a shell builtin", arg);
                     }
                     _ => {
