@@ -24,7 +24,7 @@ fn main() {
             "type" => {
                 let arg = tokens[1];
                 match arg {
-                    "exit" | "echo" | "type" |"pwd" => {
+                    "exit" | "echo" | "type" |"pwd"|"cd" => {
                         println!("{} is a shell builtin", arg);
                     }
                     _ => {
@@ -55,7 +55,31 @@ fn main() {
             "pwd"=> {
                 let curr_dir = std::env::current_dir().unwrap();
                 println!("{}",curr_dir.display());
-            }
+            },
+            "cd" => {
+
+                if tokens.len() < 2 {
+                    continue;
+                }
+
+                let path = tokens[1];
+
+                if path.starts_with('/') {
+                    let path_exists = std::path::Path::new(path).exists();
+                    let is_path_dir = std::path::Path::new(path).is_dir();
+
+                    if path_exists && is_path_dir {
+                        std::env::set_current_dir(path);
+                      
+                    }else{
+                        println!("cd: {}: No such file or directory", path);
+                    }
+                }else{
+                        println!("cd: {}: No such file or directory", path);
+                }
+
+
+            },
             _ => {
                 let args = &tokens[1..];
 
