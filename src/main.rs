@@ -63,6 +63,13 @@ fn main() {
 
                 let path = tokens[1];
 
+                //handle the ~ (home) pathing
+                if path == "~" {
+                    let home = std::env::home_dir().unwrap();
+                    std::env::set_current_dir(home);
+                    continue;
+                }
+
                 // "/" it is for abosolute path
                 if path.starts_with('/') {
                     let path_exists = std::path::Path::new(path).exists();
