@@ -124,6 +124,8 @@ fn main() {
                         //waiting for the process to complete
                         let _status = process.wait().unwrap();
                         found = true;
+
+                        break;
                     }
                 }
 
