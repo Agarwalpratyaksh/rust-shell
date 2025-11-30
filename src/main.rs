@@ -51,6 +51,10 @@ fn main() {
                         }
                     }
                 }
+            },
+            "pwd"=> {
+                let curr_dir = std::env::current_dir().unwrap();
+                println!("{}",curr_dir.display());
             }
             _ => {
                 let args = &tokens[1..];
