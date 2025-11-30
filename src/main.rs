@@ -1,6 +1,6 @@
 #[allow(unused_imports)]
 use std::io::{self, Write};
-use std::os::unix::fs::PermissionsExt;
+use std::{env::current_exe, os::unix::fs::PermissionsExt};
 
 fn main() {
     // TODO: Uncomment the code below to pass the first stage
@@ -142,11 +142,31 @@ fn tokenizer(input: &str) -> Vec<String> {
     let mut current = String::new();
     let mut in_single_quotes = false;
     let mut in_double_quotes = false;
+    let mut escaped  = false;
+
 
     let mut chars = input.chars().peekable();
 
     while let Some(ch) = chars.next() {
+
+        if escaped {
+            current.push(ch);
+            escaped = false;
+            continue;
+        }
+
         match ch {
+
+            //this case only added to remove \ and ignore the usecase of special char after the \ in above if statement
+            '\\' => {
+                if !in_single_quotes && !in_double_quotes {
+                    escaped = true;
+                    continue;
+                }else {
+                    current.push(ch);
+                }
+
+            }
 
             //case : if ' then set is single wuotes to true/false
             '\'' => {
