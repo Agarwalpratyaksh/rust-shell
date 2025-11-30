@@ -15,12 +15,20 @@ fn main() {
         let command = command.trim();
 
         //this will break the command into arrya of tokens
-        let tokens = command.split_whitespace().collect::<Vec<&str>>();
+        // let tokens = command.split_whitespace().collect::<Vec<&str>>();
+
+        let tokenized_tokens = tokenizer(command);
+        let tokens = tokenized_tokens
+            .iter()
+            .map(|s| s.as_str())
+            .collect::<Vec<&str>>();
 
         match tokens[0] {
             "exit" => break,
-            "echo" => println!("{}", tokens[1..].join(" ")),
-            // "type" => println!("{} is a shell builtin", tokens[1..].join(" ")),
+            "echo" => {
+                println!("{}", tokens[1..].join(" "))
+            }
+
             "type" => {
                 let arg = tokens[1];
                 match arg {
@@ -125,4 +133,38 @@ fn main() {
             }
         }
     }
+}
+
+fn tokenizer(input: &str) -> Vec<String> {
+    let mut token = Vec::new();
+    let mut current = String::new();
+    let mut in_single_quotes = false;
+
+    let mut chars = input.chars().peekable();
+
+    while let Some(ch) = chars.next() {
+        match ch {
+            //case1 : if ' then set is single wuotes to true/false
+            '\'' => {
+                in_single_quotes = !in_single_quotes;
+            }
+
+            //case 2 : if whitespace and outside ' , then if our curretn string has something then push it in token vec
+            c if c.is_whitespace() && !in_single_quotes => {
+                if !current.is_empty() {
+                    token.push(current.clone());
+                    current.clear();
+                }
+            }
+
+            //case 3 : everything => if noremal words or inside ' regreger rgegreg regege'
+            _ => current.push(ch),
+        }
+    }
+
+    if !current.is_empty() {
+        token.push(current);
+    }
+
+    return token;
 }
