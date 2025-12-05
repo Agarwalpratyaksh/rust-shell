@@ -141,7 +141,7 @@ fn main() {
                     std::fs::write(new_path, output);
 
                 }else{
-                    println!("{}",output);
+                    print!("{}",output);
                 }
             }
             
