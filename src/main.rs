@@ -1,6 +1,6 @@
 #[allow(unused_imports)]
 use std::io::{self, Write};
-use std::{env::current_exe, os::unix::fs::PermissionsExt};
+use std::{env::current_exe, io::{stderr, stdout}, os::unix::fs::PermissionsExt, process::{Output, Stdio}};
 
 fn main() {
     // TODO: Uncomment the code below to pass the first stage
@@ -17,16 +17,40 @@ fn main() {
         //this will break the command into arrya of tokens
         // let tokens = command.split_whitespace().collect::<Vec<&str>>();
 
-        let tokenized_tokens = tokenizer(command);
+        //our command is sent to the custom function to split our command into array of tokens (it also handles the edge cases of " ", '' , \)
+        let mut tokenized_tokens = tokenizer(command);
+
+
+        //this is for handling > case and after ">" we will have path 
+        let mut redirect_path:Option<String> = None;
+        if let Some(pos) = tokenized_tokens.iter().position(|t| t==">" || t== "1>"){
+            if pos+1 < tokenized_tokens.len() {
+                redirect_path = Some(tokenized_tokens[pos+1].clone());
+                tokenized_tokens.remove(pos+1);
+                tokenized_tokens.remove(pos);
+
+            }
+        }
+
         let tokens = tokenized_tokens
             .iter()
             .map(|s| s.as_str())
-            .collect::<Vec<&str>>();
+            .collect::<Vec<&str>>();    
+        
 
         match tokens[0] {
             "exit" => break,
             "echo" => {
-                println!("{}", tokens[1..].join(" "))
+
+                let content = tokens[1..].join(" ");
+
+                if let Some(path) = redirect_path {
+                    std::fs::write(path, content);
+                }else {
+                    println!("{}", content)
+                }
+
+
             }
 
             "type" => {
@@ -104,6 +128,25 @@ fn main() {
                     }
                 }
             }
+            "cat"=>{
+                let mut output = String::new();
+                let path = tokens[1].to_string();
+
+                match std::fs::read_to_string(&path)  {
+                    Ok(content) => output.push_str(&content),
+                    Err(_) => eprintln!("cat: {}: No such file or directory", path),
+                }
+
+                if let Some(new_path) = redirect_path {
+                    std::fs::write(new_path, output);
+
+                }else{
+                    println!("{}",output);
+                }
+            }
+            
+            
+            
             _ => {
                 let args = &tokens[1..];
 
@@ -116,22 +159,48 @@ fn main() {
                     let full_path = format!("{}/{}", path, tokens[0]);
 
                     if std::fs::metadata(&full_path).is_ok() {
-                        let mut process = std::process::Command::new(tokens[0])
-                            .args(args)
-                            .spawn()
-                            .unwrap();
+                        // let mut process = std::process::Command::new(tokens[0])
+                        //     .args(args)
+                        //     .spawn()
+                        //     .unwrap();
 
-                        //waiting for the process to complete
-                        let _status = process.wait().unwrap();
+                        // //waiting for the process to complete
+                        // let _status = process.wait().unwrap();
                         found = true;
+
+                        let mut cmd = std::process::Command::new(tokens[0]);
+                        cmd.args(args);
+                        cmd.stdout(Stdio::piped());
+                        cmd.stderr(Stdio::inherit());
+
+                        let output = cmd.output();
+
+                        match output {
+                            Ok(content) => {
+
+                                if let Some(new_path) = redirect_path.as_ref() {
+                                        std::fs::write(new_path, &content.stdout).unwrap();
+                                }else{
+                                    print!("{}",String::from_utf8_lossy(&content.stdout))
+                                }
+
+                            },
+                            Err(_) => {
+                                  println!("{}: command not found", tokens[0]);
+                            }
+                        }
 
                         break;
                     }
+
+                  
                 }
 
                 if !found {
-                    println!("{}: command not found", command);
+                        println!("{}: command not found", tokens[0]);
                 }
+
+              
             }
         }
     }
