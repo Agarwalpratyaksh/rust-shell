@@ -1,6 +1,11 @@
 #[allow(unused_imports)]
 use std::io::{self, Write};
-use std::{env::current_exe, io::{stderr, stdout}, os::unix::fs::PermissionsExt, process::{Output, Stdio}};
+use std::{
+    env::current_exe,
+    io::{stderr, stdout},
+    os::unix::fs::PermissionsExt,
+    process::{Output, Stdio},
+};
 
 fn main() {
     // TODO: Uncomment the code below to pass the first stage
@@ -20,37 +25,31 @@ fn main() {
         //our command is sent to the custom function to split our command into array of tokens (it also handles the edge cases of " ", '' , \)
         let mut tokenized_tokens = tokenizer(command);
 
-
-        //this is for handling > case and after ">" we will have path 
-        let mut redirect_path:Option<String> = None;
-        if let Some(pos) = tokenized_tokens.iter().position(|t| t==">" || t== "1>"){
-            if pos+1 < tokenized_tokens.len() {
-                redirect_path = Some(tokenized_tokens[pos+1].clone());
-                tokenized_tokens.remove(pos+1);
+        //this is for handling > case and after ">" we will have path
+        let mut redirect_path: Option<String> = None;
+        if let Some(pos) = tokenized_tokens.iter().position(|t| t == ">" || t == "1>") {
+            if pos + 1 < tokenized_tokens.len() {
+                redirect_path = Some(tokenized_tokens[pos + 1].clone());
+                tokenized_tokens.remove(pos + 1);
                 tokenized_tokens.remove(pos);
-
             }
         }
 
         let tokens = tokenized_tokens
             .iter()
             .map(|s| s.as_str())
-            .collect::<Vec<&str>>();    
-        
+            .collect::<Vec<&str>>();
 
         match tokens[0] {
             "exit" => break,
             "echo" => {
-
                 let content = tokens[1..].join(" ");
 
                 if let Some(path) = redirect_path {
                     std::fs::write(path, content);
-                }else {
+                } else {
                     println!("{}", content)
                 }
-
-
             }
 
             "type" => {
@@ -128,25 +127,24 @@ fn main() {
                     }
                 }
             }
-            "cat"=>{
+            "cat" => {
                 let mut output = String::new();
-                let path = tokens[1].to_string();
 
-                match std::fs::read_to_string(&path)  {
-                    Ok(content) => output.push_str(&content),
-                    Err(_) => eprintln!("cat: {}: No such file or directory", path),
+                for file_path in &tokens[1..] {
+                    match std::fs::read_to_string(file_path) {
+                        Ok(content) => output.push_str(&content),
+                        Err(_) => eprintln!("cat: {}: No such file or directory", file_path),
+                    }
                 }
 
-                if let Some(new_path) = redirect_path {
-                    std::fs::write(new_path, output);
-
-                }else{
-                    print!("{}",output);
+                if let Some(ref new_path) = redirect_path {
+                    std::fs::write(new_path, output).unwrap();
+                } else {
+                    print!("{}", output);
+                    io::stdout().flush().unwrap();
                 }
             }
-            
-            
-            
+
             _ => {
                 let args = &tokens[1..];
 
@@ -177,30 +175,24 @@ fn main() {
 
                         match output {
                             Ok(content) => {
-
                                 if let Some(new_path) = redirect_path.as_ref() {
-                                        std::fs::write(new_path, &content.stdout).unwrap();
-                                }else{
-                                    print!("{}",String::from_utf8_lossy(&content.stdout))
+                                    std::fs::write(new_path, &content.stdout).unwrap();
+                                } else {
+                                    print!("{}", String::from_utf8_lossy(&content.stdout))
                                 }
-
-                            },
+                            }
                             Err(_) => {
-                                  println!("{}: command not found", tokens[0]);
+                                println!("{}: command not found", tokens[0]);
                             }
                         }
 
                         break;
                     }
-
-                  
                 }
 
                 if !found {
-                        println!("{}: command not found", tokens[0]);
+                    println!("{}: command not found", tokens[0]);
                 }
-
-              
             }
         }
     }
@@ -217,7 +209,6 @@ fn tokenizer(input: &str) -> Vec<String> {
 
     while let Some(ch) = chars.next() {
         if escaped {
-
             //handling of * and \ after \ (we arfe ignoring both two and apart from these two if anything occuers after \ we not use any special proiperty of \ hence we will include \ in our token also)
             if in_double_quotes {
                 match ch {
