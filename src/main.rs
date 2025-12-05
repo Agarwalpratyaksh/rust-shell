@@ -46,7 +46,7 @@ fn main() {
                 let content = tokens[1..].join(" ");
 
                 if let Some(path) = redirect_path {
-                    std::fs::write(path, content);
+                    std::fs::write(path, format!("{}\n", content));
                 } else {
                     println!("{}", content)
                 }
