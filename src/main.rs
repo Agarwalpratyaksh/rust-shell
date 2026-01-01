@@ -19,8 +19,6 @@ fn main() {
 
         let command = command.trim();
 
-        //this will break the command into arrya of tokens
-        // let tokens = command.split_whitespace().collect::<Vec<&str>>();
 
         //our command is sent to the custom function to split our command into array of tokens (it also handles the edge cases of " ", '' , \)
         let mut tokenized_tokens = tokenizer(command);
@@ -209,7 +207,7 @@ fn tokenizer(input: &str) -> Vec<String> {
 
     while let Some(ch) = chars.next() {
         if escaped {
-            //handling of * and \ after \ (we arfe ignoring both two and apart from these two if anything occuers after \ we not use any special proiperty of \ hence we will include \ in our token also)
+            //handling of * and \ after \ (we are ignoring both two and apart from these two if anything occuers after \ we not use any special proiperty of \ hence we will include \ in our token also)
             if in_double_quotes {
                 match ch {
                     '"' | '\\' => current.push(ch),
